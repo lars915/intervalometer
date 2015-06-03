@@ -1,0 +1,156 @@
+/*
+ * Notes.txt
+ *
+ * Created: 5/30/2015 10:26:09 AM
+ *  Author: Larry
+ */ 
+
+
+ 		/*
+		time = rawTimer * .2353;
+		itoa(time, ADCResult, 10);
+		LCDSetPos(2,0);
+		LCDSendText(ADCResult);
+		LCDSendText("  Seconds");
+		OCR1A = time * 240;
+		LCDSetPos(3, 0);
+		LCDSendText("# Frames: ");
+		itoa(framecount, frames, 10);
+		LCDSendText(frames);
+		LCDSendText(" ");
+		_delay_ms(100);
+		USART_Transmit(*frames);
+		*/
+
+
+
+The whole original starting program:
+
+/**
+ * \file
+ *
+ * \brief Empty user application template
+ *
+ */
+
+/**
+ * \mainpage User Application template doxygen documentation
+ *
+ * \par Empty user application template
+ *
+ * Bare minimum empty user application template
+ *
+ * \par Content
+ *
+ * -# Include the ASF header files (through asf.h)
+ * -# "Insert system clock initialization code here" comment
+ * -# Minimal main function that starts with a call to board_init()
+ * -# "Insert application code here" comment
+ *
+ */
+
+/*
+ * Include header files for all drivers that have been imported from
+ * Atmel Software Framework (ASF).
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
+
+#ifndef F_CPU
+#define F_CPU 1000000UL
+#endif
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+#include "lcd.h"
+
+void USART_Init(unsigned int baud);
+void USART_Transmit(char data);
+
+int count = 0;
+int rawTimer = 0;
+int framecount = 0;
+
+int main (void)
+{
+	char ADCResult[4];
+	int time = 0;
+	char frames[6];
+		
+	MCUCSR = (1<<JTD); // Disable JTAG
+	MCUCSR = (1<<JTD); // Disable JTAG
+	
+	#define baudrate 9600
+	#define UBRR (F_CPU/(16*baud))-1
+	
+	// Configure ADC
+	ADMUX |= 1<<ADLAR;
+	ADMUX |= 1<<REFS0;
+	ADCSRA |= 1<<ADPS2;
+	ADCSRA |= 1<<ADIE;
+	ADCSRA |= 1<<ADEN;
+
+	// Set up blinker on PD7
+	DDRD |= 1<<PIND7;
+	TCCR1B |= (1<<CS12) | (1<<CS10) | (1<<WGM12);
+	OCR1A = 47; //49.6mS
+	TIMSK |= 1<<OCIE1A;
+	sei();
+	
+	/*
+	lcdInit();	
+	USART_Init(baudrate);
+	
+	LCDSendCommand(0x1);
+	_delay_ms(2);
+	LCDSendCommand(0x38);
+	_delay_us(50);
+	LCDSendCommand(0b00001110);
+	_delay_us(50);
+	LCDSendChar(0x41);
+	_delay_us(60);
+	LCDSetPos(0,0);
+	LCDSendText("Intervalometer");
+	*/
+	
+	//ADCSRA |= 1<<ADSC;
+	
+	while(1)
+	{
+	}
+}
+	
+ISR(TIMER1_COMPA_vect)
+{
+	PORTD ^= 1<<PIND7;
+}
+
+ISR(ADC_vect)
+{
+	rawTimer = ADCH;
+	ADCSRA |= 1<<ADSC;
+}
+
+void USART_Init( unsigned int baud )
+{
+	/* Set baud rate */
+	UBRRH = (unsigned char)(baud>>8);
+	UBRRL = (unsigned char)baud;
+	/* Enable receiver and transmitter */
+	UCSRB = (1<<RXEN)|(1<<TXEN);
+	/* Set frame format: 8data, 1stop bit */
+	UCSRC = (1<<URSEL)|(3<<UCSZ0);
+}
+
+void USART_Transmit(char data )
+{
+	/* Wait for empty transmit buffer */
+	while ( !( UCSRA & (1<<UDRE)) )
+	;
+	/* Put data into buffer, sends the data */
+	UDR = data;
+}
+

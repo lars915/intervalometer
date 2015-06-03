@@ -30,40 +30,76 @@
  */
 
 #ifndef F_CPU
-#define F_CPU 1000000UL
+#define F_CPU 16000000UL
 #endif
 
 #include <avr/io.h>
+#include <stdlib.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include "lcd.h"
 
-int count = 0;
+#define ENTER PINB0
+#define CANCEL PINB1
+#define UP PINB2
+#define DN PINB3
+#define BUTTONS PORTB
+#define BUTTON_DIR DDRB
 
-int main (void)
+#define enterFlg = 0x1;
+#define cancelFlg = 0x2;
+#define upFlg = 0x4;
+#define dnFlg = 0x8;
+
+int enterCnt = 0;
+int cancelCnt = 0;
+int upCnt = 0;
+int dnCnt = 0;
+int buttonFlags = 0;
+
+
+int main(void)
 {
-	DDRC |= 1<<PINC0;
-	
-	TCCR1B |= 1<<CS10 | 1<<CS12 | 1<<WGM12;
-	OCR1A = 487;
-	
+	MCUCSR = (1<<JTD); // Disable JTAG
+	MCUCSR = (1<<JTD); // Disable JTAG (yes, 2 are required)
+
+	// Set up buttons
+	BUTTON_DIR &= ~(1<<ENTER | 1<<CANCEL | 1<<UP | 1<<DN);
+	PORTB |= 0xF; // Configure ports 0-3 as inputs with pull-ups
+
+	// Timer interrupt, 1mS
+	TCCR1B |= (1<<CS11) | (1<<CS10) | (1<<WGM12);
+	OCR1A = 250; // 1000Hz (1mS) with div by 64
 	TIMSK |= 1<<OCIE1A;
-	
 	sei();
-		
+
+	DDRD |= 1<<PIND7;
+	LCDInit();
+	LCDSendText("Intervalometer");
+	LCDSetPos(1,0);
+	LCDSendText("Copyright LAS 2015");
+	LCDSetPos(2,0);
+	LCDSendText("Enter to continue");
+
 	while(1)
 	{
+		
+		if (bit_is_clear(PINB, 0))
+		{
+			LCDSetPos(3,0);
+			LCDSendText("Button OFF");
+		}
+		else
+		{
+			LCDSetPos(3,0);
+			LCDSendText("Button ON ");
+		}
+		_delay_ms(100);
+
 	}
 }
-	
+
 ISR(TIMER1_COMPA_vect)
 {
-	count++;
-	if (count>=5) {
-		PORTC |= 1<<PINC0;
-		_delay_ms(100);
-		PORTC &= !(1<<PINC0);
-		count = 0;
-	}
+	PORTD ^= (1<<PIND7);
 }
-	
-
