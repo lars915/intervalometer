@@ -46,16 +46,18 @@
 #define BUTTONS PORTB
 #define BUTTON_DIR DDRB
 
-#define enterFlg = 0x1;
-#define cancelFlg = 0x2;
-#define upFlg = 0x4;
-#define dnFlg = 0x8;
 
-int enterCnt = 0;
-int cancelCnt = 0;
-int upCnt = 0;
-int dnCnt = 0;
-int buttonFlags = 0;
+volatile int enterCnt = 0;
+volatile int cancelCnt = 0;
+volatile int upCnt = 0;
+volatile int dnCnt = 0;
+volatile int enterFlag = 0;
+volatile int cancelFlag = 0;
+volatile int upFlag = 0;
+volatile int dnFlag = 0;
+
+volatile int LEDFlag = 0;
+volatile int LEDCnt = 0;
 
 
 int main(void)
@@ -75,31 +77,150 @@ int main(void)
 
 	DDRD |= 1<<PIND7;
 	LCDInit();
-	LCDSendText("Intervalometer");
-	LCDSetPos(1,0);
-	LCDSendText("Copyright LAS 2015");
-	LCDSetPos(2,0);
-	LCDSendText("Enter to continue");
+	//LCDSendText("Intervalometer");
+	//LCDSetPos(1,0);
+	//LCDSendText("Copyright LAS 2015");
+	//LCDSetPos(2,0);
+	//LCDSendText("Enter to continue");
 
 	while(1)
 	{
+		if (LEDFlag)
+		{
+			PORTD ^= 1<<PORTD7;
+			LEDFlag = 0;
+		}
 		
-		if (bit_is_clear(PINB, 0))
+		// Enter button
+		if (enterFlag)
+		{
+			LCDSetPos(0,0);
+			LCDSendText("Enter TRUE     ");
+		}
+		else
+		{
+			LCDSetPos(0,0);
+			LCDSendText("Enter FALSE");
+		}
+		
+		// Cancel button
+		if (cancelFlag)
+		{
+			LCDSetPos(1,0);
+			LCDSendText("Cancel TRUE     ");
+		}
+		else
+		{
+			LCDSetPos(1,0);
+			LCDSendText("Cancel FALSE");
+		}
+		
+		// UP flag
+		if (upFlag)
+		{
+			LCDSetPos(2,0);
+			LCDSendText("UP TRUE     ");
+		}
+		else
+		{
+			LCDSetPos(2,0);
+			LCDSendText("UP FALSE");
+		}
+		
+		// DOWN flag
+		if (dnFlag)
 		{
 			LCDSetPos(3,0);
-			LCDSendText("Button OFF");
+			LCDSendText("DOWN TRUE     ");
 		}
 		else
 		{
 			LCDSetPos(3,0);
-			LCDSendText("Button ON ");
+			LCDSendText("DOWN FALSE");
 		}
-		_delay_ms(100);
 
 	}
 }
 
 ISR(TIMER1_COMPA_vect)
 {
-	PORTD ^= (1<<PIND7);
+	LEDCnt++;
+	if (LEDCnt >= 500)
+	{
+		LEDFlag = 1;
+		LEDCnt = 0;
+	}
+	
+	// Enter button flag handling
+	if (bit_is_clear(PINB, 0))
+	{
+		enterCnt++;
+		if (enterCnt >= 20)
+		{
+			enterFlag = 1;
+		}
+	}
+	else
+	{
+		enterFlag = 0;
+		if (enterCnt > 0)
+		{
+			enterCnt--;
+		}
+	}
+
+	// Cancel button flag handling
+	if (bit_is_clear(PINB, 1))
+	{
+		cancelCnt++;
+		if (cancelCnt >= 20)
+		{
+			cancelFlag = 1;
+		}
+	}
+	else
+	{
+		cancelFlag = 0;
+		if (cancelCnt > 0)
+		{
+			cancelCnt--;
+		}
+	}
+	
+	// Up button flag handling
+	if (bit_is_clear(PINB, 2))
+	{
+		upCnt++;
+		if (upCnt >= 20)
+		{
+			upFlag = 1;
+		}
+	}
+	else
+	{
+		upFlag = 0;
+		if (upCnt > 0)
+		{
+			upCnt--;
+		}
+	}
+	
+	// Down button flag handling
+	if (bit_is_clear(PINB, 3))
+	{
+		dnCnt++;
+		if (dnCnt >= 20)
+		{
+			dnFlag = 1;
+		}
+	}
+	else
+	{
+		dnFlag = 0;
+		if (dnCnt > 0)
+		{
+			dnCnt--;
+		}
+	}
+
 }

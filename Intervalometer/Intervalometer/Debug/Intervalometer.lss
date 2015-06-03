@@ -3,29 +3,31 @@ Intervalometer.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         0000025c  00000000  00000000  00000074  2**1
+  0 .text         00000456  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         0000004a  00800060  0000025c  000002d0  2**0
+  1 .data         0000006a  00800060  00000456  000004ea  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .comment      00000030  00000000  00000000  0000031a  2**0
+  2 .bss          00000014  008000ca  008000ca  00000554  2**0
+                  ALLOC
+  3 .comment      00000030  00000000  00000000  00000554  2**0
                   CONTENTS, READONLY
-  3 .debug_aranges 00000078  00000000  00000000  0000034a  2**0
+  4 .debug_aranges 00000078  00000000  00000000  00000584  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   00000773  00000000  00000000  000003c2  2**0
+  5 .debug_info   00000804  00000000  00000000  000005fc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 000002ee  00000000  00000000  00000b35  2**0
+  6 .debug_abbrev 00000273  00000000  00000000  00000e00  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   000007e6  00000000  00000000  00000e23  2**0
+  7 .debug_line   000008e5  00000000  00000000  00001073  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  000000f4  00000000  00000000  0000160c  2**2
+  8 .debug_frame  00000100  00000000  00000000  00001958  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    000063dd  00000000  00000000  00001700  2**0
+  9 .debug_str    000063c8  00000000  00000000  00001a58  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_loc    0000020f  00000000  00000000  00007add  2**0
+ 10 .debug_loc    00000229  00000000  00000000  00007e20  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000058  00000000  00000000  00007cec  2**0
+ 11 .debug_ranges 00000058  00000000  00000000  00008049  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_macro  000022b7  00000000  00000000  00007d44  2**0
+ 12 .debug_macro  0000229f  00000000  00000000  000080a1  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -45,7 +47,7 @@ Disassembly of section .text:
   16:	00 00       	nop
   18:	38 c0       	rjmp	.+112    	; 0x8a <__bad_interrupt>
   1a:	00 00       	nop
-  1c:	0e c1       	rjmp	.+540    	; 0x23a <__vector_7>
+  1c:	40 c1       	rjmp	.+640    	; 0x29e <__vector_7>
   1e:	00 00       	nop
   20:	34 c0       	rjmp	.+104    	; 0x8a <__bad_interrupt>
   22:	00 00       	nop
@@ -86,18 +88,18 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	ec e5       	ldi	r30, 0x5C	; 92
-  68:	f2 e0       	ldi	r31, 0x02	; 2
+  66:	e6 e5       	ldi	r30, 0x56	; 86
+  68:	f4 e0       	ldi	r31, 0x04	; 4
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
   6e:	0d 92       	st	X+, r0
-  70:	aa 3a       	cpi	r26, 0xAA	; 170
+  70:	aa 3c       	cpi	r26, 0xCA	; 202
   72:	b1 07       	cpc	r27, r17
   74:	d9 f7       	brne	.-10     	; 0x6c <__do_copy_data+0xc>
 
 00000076 <__do_clear_bss>:
   76:	20 e0       	ldi	r18, 0x00	; 0
-  78:	aa ea       	ldi	r26, 0xAA	; 170
+  78:	aa ec       	ldi	r26, 0xCA	; 202
   7a:	b0 e0       	ldi	r27, 0x00	; 0
   7c:	01 c0       	rjmp	.+2      	; 0x80 <.do_clear_bss_start>
 
@@ -105,11 +107,11 @@ Disassembly of section .text:
   7e:	1d 92       	st	X+, r1
 
 00000080 <.do_clear_bss_start>:
-  80:	aa 3a       	cpi	r26, 0xAA	; 170
+  80:	ae 3d       	cpi	r26, 0xDE	; 222
   82:	b2 07       	cpc	r27, r18
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
   86:	9b d0       	rcall	.+310    	; 0x1be <main>
-  88:	e7 c0       	rjmp	.+462    	; 0x258 <_exit>
+  88:	e4 c1       	rjmp	.+968    	; 0x452 <_exit>
 
 0000008a <__bad_interrupt>:
   8a:	ba cf       	rjmp	.-140    	; 0x0 <__vectors>
@@ -408,7 +410,7 @@ void LCDSendText(char *text)
  1bc:	08 95       	ret
 
 000001be <main>:
-int buttonFlags = 0;
+volatile int LEDCnt = 0;
 
 
 int main(void)
@@ -450,98 +452,374 @@ int main(void)
  1e6:	8f 9a       	sbi	0x11, 7	; 17
 	LCDInit();
  1e8:	7c df       	rcall	.-264    	; 0xe2 <LCDInit>
-	LCDSendText("Intervalometer");
- 1ea:	80 e6       	ldi	r24, 0x60	; 96
- 1ec:	90 e0       	ldi	r25, 0x00	; 0
- 1ee:	d9 df       	rcall	.-78     	; 0x1a2 <LCDSendText>
-	LCDSetPos(1,0);
- 1f0:	60 e0       	ldi	r22, 0x00	; 0
- 1f2:	81 e0       	ldi	r24, 0x01	; 1
- 1f4:	9e df       	rcall	.-196    	; 0x132 <LCDSetPos>
-	LCDSendText("Copyright LAS 2015");
- 1f6:	8f e6       	ldi	r24, 0x6F	; 111
- 1f8:	90 e0       	ldi	r25, 0x00	; 0
- 1fa:	d3 df       	rcall	.-90     	; 0x1a2 <LCDSendText>
-	LCDSetPos(2,0);
- 1fc:	60 e0       	ldi	r22, 0x00	; 0
- 1fe:	82 e0       	ldi	r24, 0x02	; 2
- 200:	98 df       	rcall	.-208    	; 0x132 <LCDSetPos>
-	LCDSendText("Enter to continue");
- 202:	82 e8       	ldi	r24, 0x82	; 130
- 204:	90 e0       	ldi	r25, 0x00	; 0
- 206:	cd df       	rcall	.-102    	; 0x1a2 <LCDSendText>
+	//LCDSetPos(2,0);
+	//LCDSendText("Enter to continue");
 
 	while(1)
 	{
+		if (LEDFlag)
+ 1ea:	80 91 cc 00 	lds	r24, 0x00CC
+ 1ee:	90 91 cd 00 	lds	r25, 0x00CD
+ 1f2:	89 2b       	or	r24, r25
+ 1f4:	39 f0       	breq	.+14     	; 0x204 <main+0x46>
+		{
+			PORTD ^= 1<<PORTD7;
+ 1f6:	82 b3       	in	r24, 0x12	; 18
+ 1f8:	80 58       	subi	r24, 0x80	; 128
+ 1fa:	82 bb       	out	0x12, r24	; 18
+			LEDFlag = 0;
+ 1fc:	10 92 cd 00 	sts	0x00CD, r1
+ 200:	10 92 cc 00 	sts	0x00CC, r1
+		}
 		
-		if (bit_is_clear(PINB, 0))
- 208:	b0 99       	sbic	0x16, 0	; 22
- 20a:	07 c0       	rjmp	.+14     	; 0x21a <main+0x5c>
+		// Enter button
+		if (enterFlag)
+ 204:	80 91 d4 00 	lds	r24, 0x00D4
+ 208:	90 91 d5 00 	lds	r25, 0x00D5
+ 20c:	89 2b       	or	r24, r25
+ 20e:	39 f0       	breq	.+14     	; 0x21e <main+0x60>
+		{
+			LCDSetPos(0,0);
+ 210:	60 e0       	ldi	r22, 0x00	; 0
+ 212:	80 e0       	ldi	r24, 0x00	; 0
+ 214:	8e df       	rcall	.-228    	; 0x132 <LCDSetPos>
+			LCDSendText("Enter TRUE     ");
+ 216:	80 e6       	ldi	r24, 0x60	; 96
+ 218:	90 e0       	ldi	r25, 0x00	; 0
+ 21a:	c3 df       	rcall	.-122    	; 0x1a2 <LCDSendText>
+ 21c:	06 c0       	rjmp	.+12     	; 0x22a <main+0x6c>
+		}
+		else
+		{
+			LCDSetPos(0,0);
+ 21e:	60 e0       	ldi	r22, 0x00	; 0
+ 220:	80 e0       	ldi	r24, 0x00	; 0
+ 222:	87 df       	rcall	.-242    	; 0x132 <LCDSetPos>
+			LCDSendText("Enter FALSE");
+ 224:	80 e7       	ldi	r24, 0x70	; 112
+ 226:	90 e0       	ldi	r25, 0x00	; 0
+ 228:	bc df       	rcall	.-136    	; 0x1a2 <LCDSendText>
+		}
+		
+		// Cancel button
+		if (cancelFlag)
+ 22a:	80 91 d2 00 	lds	r24, 0x00D2
+ 22e:	90 91 d3 00 	lds	r25, 0x00D3
+ 232:	89 2b       	or	r24, r25
+ 234:	39 f0       	breq	.+14     	; 0x244 <main+0x86>
+		{
+			LCDSetPos(1,0);
+ 236:	60 e0       	ldi	r22, 0x00	; 0
+ 238:	81 e0       	ldi	r24, 0x01	; 1
+ 23a:	7b df       	rcall	.-266    	; 0x132 <LCDSetPos>
+			LCDSendText("Cancel TRUE     ");
+ 23c:	8c e7       	ldi	r24, 0x7C	; 124
+ 23e:	90 e0       	ldi	r25, 0x00	; 0
+ 240:	b0 df       	rcall	.-160    	; 0x1a2 <LCDSendText>
+ 242:	06 c0       	rjmp	.+12     	; 0x250 <main+0x92>
+		}
+		else
+		{
+			LCDSetPos(1,0);
+ 244:	60 e0       	ldi	r22, 0x00	; 0
+ 246:	81 e0       	ldi	r24, 0x01	; 1
+ 248:	74 df       	rcall	.-280    	; 0x132 <LCDSetPos>
+			LCDSendText("Cancel FALSE");
+ 24a:	8d e8       	ldi	r24, 0x8D	; 141
+ 24c:	90 e0       	ldi	r25, 0x00	; 0
+ 24e:	a9 df       	rcall	.-174    	; 0x1a2 <LCDSendText>
+		}
+		
+		// UP flag
+		if (upFlag)
+ 250:	80 91 d0 00 	lds	r24, 0x00D0
+ 254:	90 91 d1 00 	lds	r25, 0x00D1
+ 258:	89 2b       	or	r24, r25
+ 25a:	39 f0       	breq	.+14     	; 0x26a <main+0xac>
+		{
+			LCDSetPos(2,0);
+ 25c:	60 e0       	ldi	r22, 0x00	; 0
+ 25e:	82 e0       	ldi	r24, 0x02	; 2
+ 260:	68 df       	rcall	.-304    	; 0x132 <LCDSetPos>
+			LCDSendText("UP TRUE     ");
+ 262:	8a e9       	ldi	r24, 0x9A	; 154
+ 264:	90 e0       	ldi	r25, 0x00	; 0
+ 266:	9d df       	rcall	.-198    	; 0x1a2 <LCDSendText>
+ 268:	06 c0       	rjmp	.+12     	; 0x276 <main+0xb8>
+		}
+		else
+		{
+			LCDSetPos(2,0);
+ 26a:	60 e0       	ldi	r22, 0x00	; 0
+ 26c:	82 e0       	ldi	r24, 0x02	; 2
+ 26e:	61 df       	rcall	.-318    	; 0x132 <LCDSetPos>
+			LCDSendText("UP FALSE");
+ 270:	87 ea       	ldi	r24, 0xA7	; 167
+ 272:	90 e0       	ldi	r25, 0x00	; 0
+ 274:	96 df       	rcall	.-212    	; 0x1a2 <LCDSendText>
+		}
+		
+		// DOWN flag
+		if (dnFlag)
+ 276:	80 91 ce 00 	lds	r24, 0x00CE
+ 27a:	90 91 cf 00 	lds	r25, 0x00CF
+ 27e:	89 2b       	or	r24, r25
+ 280:	39 f0       	breq	.+14     	; 0x290 <main+0xd2>
 		{
 			LCDSetPos(3,0);
- 20c:	60 e0       	ldi	r22, 0x00	; 0
- 20e:	83 e0       	ldi	r24, 0x03	; 3
- 210:	90 df       	rcall	.-224    	; 0x132 <LCDSetPos>
-			LCDSendText("Button OFF");
- 212:	84 e9       	ldi	r24, 0x94	; 148
- 214:	90 e0       	ldi	r25, 0x00	; 0
- 216:	c5 df       	rcall	.-118    	; 0x1a2 <LCDSendText>
- 218:	06 c0       	rjmp	.+12     	; 0x226 <main+0x68>
+ 282:	60 e0       	ldi	r22, 0x00	; 0
+ 284:	83 e0       	ldi	r24, 0x03	; 3
+ 286:	55 df       	rcall	.-342    	; 0x132 <LCDSetPos>
+			LCDSendText("DOWN TRUE     ");
+ 288:	80 eb       	ldi	r24, 0xB0	; 176
+ 28a:	90 e0       	ldi	r25, 0x00	; 0
+ 28c:	8a df       	rcall	.-236    	; 0x1a2 <LCDSendText>
+ 28e:	ad cf       	rjmp	.-166    	; 0x1ea <main+0x2c>
 		}
 		else
 		{
 			LCDSetPos(3,0);
- 21a:	60 e0       	ldi	r22, 0x00	; 0
- 21c:	83 e0       	ldi	r24, 0x03	; 3
- 21e:	89 df       	rcall	.-238    	; 0x132 <LCDSetPos>
-			LCDSendText("Button ON ");
- 220:	8f e9       	ldi	r24, 0x9F	; 159
- 222:	90 e0       	ldi	r25, 0x00	; 0
- 224:	be df       	rcall	.-132    	; 0x1a2 <LCDSendText>
-	#else
-		//round up by default
-		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
-	#endif
+ 290:	60 e0       	ldi	r22, 0x00	; 0
+ 292:	83 e0       	ldi	r24, 0x03	; 3
+ 294:	4e df       	rcall	.-356    	; 0x132 <LCDSetPos>
+			LCDSendText("DOWN FALSE");
+ 296:	8f eb       	ldi	r24, 0xBF	; 191
+ 298:	90 e0       	ldi	r25, 0x00	; 0
+ 29a:	83 df       	rcall	.-250    	; 0x1a2 <LCDSendText>
+ 29c:	a6 cf       	rjmp	.-180    	; 0x1ea <main+0x2c>
 
-	__builtin_avr_delay_cycles(__ticks_dc);
- 226:	2f ef       	ldi	r18, 0xFF	; 255
- 228:	81 ee       	ldi	r24, 0xE1	; 225
- 22a:	94 e0       	ldi	r25, 0x04	; 4
- 22c:	21 50       	subi	r18, 0x01	; 1
- 22e:	80 40       	sbci	r24, 0x00	; 0
- 230:	90 40       	sbci	r25, 0x00	; 0
- 232:	e1 f7       	brne	.-8      	; 0x22c <main+0x6e>
- 234:	00 c0       	rjmp	.+0      	; 0x236 <main+0x78>
- 236:	00 00       	nop
- 238:	e7 cf       	rjmp	.-50     	; 0x208 <main+0x4a>
-
-0000023a <__vector_7>:
+0000029e <__vector_7>:
 
 	}
 }
 
 ISR(TIMER1_COMPA_vect)
 {
- 23a:	1f 92       	push	r1
- 23c:	0f 92       	push	r0
- 23e:	0f b6       	in	r0, 0x3f	; 63
- 240:	0f 92       	push	r0
- 242:	11 24       	eor	r1, r1
- 244:	8f 93       	push	r24
-	PORTD ^= (1<<PIND7);
- 246:	82 b3       	in	r24, 0x12	; 18
- 248:	80 58       	subi	r24, 0x80	; 128
- 24a:	82 bb       	out	0x12, r24	; 18
+ 29e:	1f 92       	push	r1
+ 2a0:	0f 92       	push	r0
+ 2a2:	0f b6       	in	r0, 0x3f	; 63
+ 2a4:	0f 92       	push	r0
+ 2a6:	11 24       	eor	r1, r1
+ 2a8:	2f 93       	push	r18
+ 2aa:	8f 93       	push	r24
+ 2ac:	9f 93       	push	r25
+	LEDCnt++;
+ 2ae:	80 91 ca 00 	lds	r24, 0x00CA
+ 2b2:	90 91 cb 00 	lds	r25, 0x00CB
+ 2b6:	01 96       	adiw	r24, 0x01	; 1
+ 2b8:	90 93 cb 00 	sts	0x00CB, r25
+ 2bc:	80 93 ca 00 	sts	0x00CA, r24
+	if (LEDCnt >= 500)
+ 2c0:	80 91 ca 00 	lds	r24, 0x00CA
+ 2c4:	90 91 cb 00 	lds	r25, 0x00CB
+ 2c8:	84 3f       	cpi	r24, 0xF4	; 244
+ 2ca:	91 40       	sbci	r25, 0x01	; 1
+ 2cc:	54 f0       	brlt	.+20     	; 0x2e2 <__vector_7+0x44>
+	{
+		LEDFlag = 1;
+ 2ce:	81 e0       	ldi	r24, 0x01	; 1
+ 2d0:	90 e0       	ldi	r25, 0x00	; 0
+ 2d2:	90 93 cd 00 	sts	0x00CD, r25
+ 2d6:	80 93 cc 00 	sts	0x00CC, r24
+		LEDCnt = 0;
+ 2da:	10 92 cb 00 	sts	0x00CB, r1
+ 2de:	10 92 ca 00 	sts	0x00CA, r1
+	}
+	
+	// Enter button flag handling
+	if (bit_is_clear(PINB, 0))
+ 2e2:	b0 99       	sbic	0x16, 0	; 22
+ 2e4:	16 c0       	rjmp	.+44     	; 0x312 <__vector_7+0x74>
+	{
+		enterCnt++;
+ 2e6:	80 91 dc 00 	lds	r24, 0x00DC
+ 2ea:	90 91 dd 00 	lds	r25, 0x00DD
+ 2ee:	01 96       	adiw	r24, 0x01	; 1
+ 2f0:	90 93 dd 00 	sts	0x00DD, r25
+ 2f4:	80 93 dc 00 	sts	0x00DC, r24
+		if (enterCnt >= 20)
+ 2f8:	80 91 dc 00 	lds	r24, 0x00DC
+ 2fc:	90 91 dd 00 	lds	r25, 0x00DD
+ 300:	44 97       	sbiw	r24, 0x14	; 20
+ 302:	dc f0       	brlt	.+54     	; 0x33a <__vector_7+0x9c>
+		{
+			enterFlag = 1;
+ 304:	81 e0       	ldi	r24, 0x01	; 1
+ 306:	90 e0       	ldi	r25, 0x00	; 0
+ 308:	90 93 d5 00 	sts	0x00D5, r25
+ 30c:	80 93 d4 00 	sts	0x00D4, r24
+ 310:	14 c0       	rjmp	.+40     	; 0x33a <__vector_7+0x9c>
+		}
+	}
+	else
+	{
+		enterFlag = 0;
+ 312:	10 92 d5 00 	sts	0x00D5, r1
+ 316:	10 92 d4 00 	sts	0x00D4, r1
+		if (enterCnt > 0)
+ 31a:	80 91 dc 00 	lds	r24, 0x00DC
+ 31e:	90 91 dd 00 	lds	r25, 0x00DD
+ 322:	18 16       	cp	r1, r24
+ 324:	19 06       	cpc	r1, r25
+ 326:	4c f4       	brge	.+18     	; 0x33a <__vector_7+0x9c>
+		{
+			enterCnt--;
+ 328:	80 91 dc 00 	lds	r24, 0x00DC
+ 32c:	90 91 dd 00 	lds	r25, 0x00DD
+ 330:	01 97       	sbiw	r24, 0x01	; 1
+ 332:	90 93 dd 00 	sts	0x00DD, r25
+ 336:	80 93 dc 00 	sts	0x00DC, r24
+		}
+	}
+
+	// Cancel button flag handling
+	if (bit_is_clear(PINB, 1))
+ 33a:	b1 99       	sbic	0x16, 1	; 22
+ 33c:	16 c0       	rjmp	.+44     	; 0x36a <__vector_7+0xcc>
+	{
+		cancelCnt++;
+ 33e:	80 91 da 00 	lds	r24, 0x00DA
+ 342:	90 91 db 00 	lds	r25, 0x00DB
+ 346:	01 96       	adiw	r24, 0x01	; 1
+ 348:	90 93 db 00 	sts	0x00DB, r25
+ 34c:	80 93 da 00 	sts	0x00DA, r24
+		if (cancelCnt >= 20)
+ 350:	80 91 da 00 	lds	r24, 0x00DA
+ 354:	90 91 db 00 	lds	r25, 0x00DB
+ 358:	44 97       	sbiw	r24, 0x14	; 20
+ 35a:	dc f0       	brlt	.+54     	; 0x392 <__vector_7+0xf4>
+		{
+			cancelFlag = 1;
+ 35c:	81 e0       	ldi	r24, 0x01	; 1
+ 35e:	90 e0       	ldi	r25, 0x00	; 0
+ 360:	90 93 d3 00 	sts	0x00D3, r25
+ 364:	80 93 d2 00 	sts	0x00D2, r24
+ 368:	14 c0       	rjmp	.+40     	; 0x392 <__vector_7+0xf4>
+		}
+	}
+	else
+	{
+		cancelFlag = 0;
+ 36a:	10 92 d3 00 	sts	0x00D3, r1
+ 36e:	10 92 d2 00 	sts	0x00D2, r1
+		if (cancelCnt > 0)
+ 372:	80 91 da 00 	lds	r24, 0x00DA
+ 376:	90 91 db 00 	lds	r25, 0x00DB
+ 37a:	18 16       	cp	r1, r24
+ 37c:	19 06       	cpc	r1, r25
+ 37e:	4c f4       	brge	.+18     	; 0x392 <__vector_7+0xf4>
+		{
+			cancelCnt--;
+ 380:	80 91 da 00 	lds	r24, 0x00DA
+ 384:	90 91 db 00 	lds	r25, 0x00DB
+ 388:	01 97       	sbiw	r24, 0x01	; 1
+ 38a:	90 93 db 00 	sts	0x00DB, r25
+ 38e:	80 93 da 00 	sts	0x00DA, r24
+		}
+	}
+
+	if (bit_is_clear(PINB, 2))
+ 392:	b2 99       	sbic	0x16, 2	; 22
+ 394:	16 c0       	rjmp	.+44     	; 0x3c2 <__vector_7+0x124>
+	{
+		upCnt++;
+ 396:	80 91 d8 00 	lds	r24, 0x00D8
+ 39a:	90 91 d9 00 	lds	r25, 0x00D9
+ 39e:	01 96       	adiw	r24, 0x01	; 1
+ 3a0:	90 93 d9 00 	sts	0x00D9, r25
+ 3a4:	80 93 d8 00 	sts	0x00D8, r24
+		if (upCnt >= 20)
+ 3a8:	80 91 d8 00 	lds	r24, 0x00D8
+ 3ac:	90 91 d9 00 	lds	r25, 0x00D9
+ 3b0:	44 97       	sbiw	r24, 0x14	; 20
+ 3b2:	dc f0       	brlt	.+54     	; 0x3ea <__vector_7+0x14c>
+		{
+			upFlag = 1;
+ 3b4:	81 e0       	ldi	r24, 0x01	; 1
+ 3b6:	90 e0       	ldi	r25, 0x00	; 0
+ 3b8:	90 93 d1 00 	sts	0x00D1, r25
+ 3bc:	80 93 d0 00 	sts	0x00D0, r24
+ 3c0:	14 c0       	rjmp	.+40     	; 0x3ea <__vector_7+0x14c>
+		}
+	}
+	else
+	{
+		upFlag = 0;
+ 3c2:	10 92 d1 00 	sts	0x00D1, r1
+ 3c6:	10 92 d0 00 	sts	0x00D0, r1
+		if (upCnt > 0)
+ 3ca:	80 91 d8 00 	lds	r24, 0x00D8
+ 3ce:	90 91 d9 00 	lds	r25, 0x00D9
+ 3d2:	18 16       	cp	r1, r24
+ 3d4:	19 06       	cpc	r1, r25
+ 3d6:	4c f4       	brge	.+18     	; 0x3ea <__vector_7+0x14c>
+		{
+			upCnt--;
+ 3d8:	80 91 d8 00 	lds	r24, 0x00D8
+ 3dc:	90 91 d9 00 	lds	r25, 0x00D9
+ 3e0:	01 97       	sbiw	r24, 0x01	; 1
+ 3e2:	90 93 d9 00 	sts	0x00D9, r25
+ 3e6:	80 93 d8 00 	sts	0x00D8, r24
+		}
+	}
+
+	if (bit_is_clear(PINB, 3))
+ 3ea:	b3 99       	sbic	0x16, 3	; 22
+ 3ec:	16 c0       	rjmp	.+44     	; 0x41a <__vector_7+0x17c>
+	{
+		dnCnt++;
+ 3ee:	80 91 d6 00 	lds	r24, 0x00D6
+ 3f2:	90 91 d7 00 	lds	r25, 0x00D7
+ 3f6:	01 96       	adiw	r24, 0x01	; 1
+ 3f8:	90 93 d7 00 	sts	0x00D7, r25
+ 3fc:	80 93 d6 00 	sts	0x00D6, r24
+		if (dnCnt >= 20)
+ 400:	80 91 d6 00 	lds	r24, 0x00D6
+ 404:	90 91 d7 00 	lds	r25, 0x00D7
+ 408:	44 97       	sbiw	r24, 0x14	; 20
+ 40a:	dc f0       	brlt	.+54     	; 0x442 <__vector_7+0x1a4>
+		{
+			dnFlag = 1;
+ 40c:	81 e0       	ldi	r24, 0x01	; 1
+ 40e:	90 e0       	ldi	r25, 0x00	; 0
+ 410:	90 93 cf 00 	sts	0x00CF, r25
+ 414:	80 93 ce 00 	sts	0x00CE, r24
+ 418:	14 c0       	rjmp	.+40     	; 0x442 <__vector_7+0x1a4>
+		}
+	}
+	else
+	{
+		dnFlag = 0;
+ 41a:	10 92 cf 00 	sts	0x00CF, r1
+ 41e:	10 92 ce 00 	sts	0x00CE, r1
+		if (dnCnt > 0)
+ 422:	80 91 d6 00 	lds	r24, 0x00D6
+ 426:	90 91 d7 00 	lds	r25, 0x00D7
+ 42a:	18 16       	cp	r1, r24
+ 42c:	19 06       	cpc	r1, r25
+ 42e:	4c f4       	brge	.+18     	; 0x442 <__vector_7+0x1a4>
+		{
+			dnCnt--;
+ 430:	80 91 d6 00 	lds	r24, 0x00D6
+ 434:	90 91 d7 00 	lds	r25, 0x00D7
+ 438:	01 97       	sbiw	r24, 0x01	; 1
+ 43a:	90 93 d7 00 	sts	0x00D7, r25
+ 43e:	80 93 d6 00 	sts	0x00D6, r24
+		}
+	}
+
 }
- 24c:	8f 91       	pop	r24
- 24e:	0f 90       	pop	r0
- 250:	0f be       	out	0x3f, r0	; 63
- 252:	0f 90       	pop	r0
- 254:	1f 90       	pop	r1
- 256:	18 95       	reti
+ 442:	9f 91       	pop	r25
+ 444:	8f 91       	pop	r24
+ 446:	2f 91       	pop	r18
+ 448:	0f 90       	pop	r0
+ 44a:	0f be       	out	0x3f, r0	; 63
+ 44c:	0f 90       	pop	r0
+ 44e:	1f 90       	pop	r1
+ 450:	18 95       	reti
 
-00000258 <_exit>:
- 258:	f8 94       	cli
+00000452 <_exit>:
+ 452:	f8 94       	cli
 
-0000025a <__stop_program>:
- 25a:	ff cf       	rjmp	.-2      	; 0x25a <__stop_program>
+00000454 <__stop_program>:
+ 454:	ff cf       	rjmp	.-2      	; 0x454 <__stop_program>
