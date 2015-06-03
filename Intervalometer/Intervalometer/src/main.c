@@ -90,7 +90,7 @@ int main(void)
 			PORTD ^= 1<<PORTD7;
 			LEDFlag = 0;
 		}
-		
+
 		// Enter button
 		if (enterFlag)
 		{
@@ -102,7 +102,7 @@ int main(void)
 			LCDSetPos(0,0);
 			LCDSendText("Enter FALSE");
 		}
-		
+
 		// Cancel button
 		if (cancelFlag)
 		{
@@ -114,7 +114,7 @@ int main(void)
 			LCDSetPos(1,0);
 			LCDSendText("Cancel FALSE");
 		}
-		
+
 		// UP flag
 		if (upFlag)
 		{
@@ -126,8 +126,8 @@ int main(void)
 			LCDSetPos(2,0);
 			LCDSendText("UP FALSE");
 		}
-		
-		// DOWN flag
+
+		// DOWN flag handler
 		if (dnFlag)
 		{
 			LCDSetPos(3,0);
@@ -150,7 +150,7 @@ ISR(TIMER1_COMPA_vect)
 		LEDFlag = 1;
 		LEDCnt = 0;
 	}
-	
+
 	// Enter button flag handling
 	if (bit_is_clear(PINB, 0))
 	{
@@ -186,7 +186,7 @@ ISR(TIMER1_COMPA_vect)
 			cancelCnt--;
 		}
 	}
-	
+
 	// Up button flag handling
 	if (bit_is_clear(PINB, 2))
 	{
@@ -204,7 +204,7 @@ ISR(TIMER1_COMPA_vect)
 			upCnt--;
 		}
 	}
-	
+
 	// Down button flag handling
 	if (bit_is_clear(PINB, 3))
 	{
