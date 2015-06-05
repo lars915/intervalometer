@@ -39,6 +39,9 @@
 #include <avr/interrupt.h>
 #include "lcd.h"
 
+#define BAUD 38400
+#define UBRR (F_CPU/(16*BAUD))-1
+
 #define ENTER PINB0
 #define CANCEL PINB1
 #define UP PINB2
@@ -46,6 +49,7 @@
 #define BUTTONS PORTB
 #define BUTTON_DIR DDRB
 
+void serialSendChar(unsigned char c);
 
 volatile int enterCnt = 0;
 volatile int cancelCnt = 0;
@@ -58,12 +62,20 @@ volatile int dnFlag = 0;
 
 volatile int LEDFlag = 0;
 volatile int LEDCnt = 0;
+volatile unsigned char c = 0;
+volatile int rxflag = 0;
 
 
 int main(void)
 {
 	MCUCSR = (1<<JTD); // Disable JTAG
 	MCUCSR = (1<<JTD); // Disable JTAG (yes, 2 are required)
+
+	// Configure serial
+	UBRRH = (uint8_t)(UBRR>>8);
+	UBRRL = (uint8_t)(UBRR);
+	UCSRB |= (1<<TXEN) | (1<<RXEN) | (1<<RXCIE);
+	UCSRC |= (1<<URSEL) | (1<<UCSZ1) | (1<<UCSZ0);
 
 	// Set up buttons
 	BUTTON_DIR &= ~(1<<ENTER | 1<<CANCEL | 1<<UP | 1<<DN);
@@ -82,9 +94,18 @@ int main(void)
 	//LCDSendText("Copyright LAS 2015");
 	//LCDSetPos(2,0);
 	//LCDSendText("Enter to continue");
+	int count = 0;
+	//char buffer[] = "";
 
 	while(1)
 	{
+
+		if (rxflag)
+		{
+			LCDSetPos(0,15);
+			LCDSendChar(c);
+		}
+
 		if (LEDFlag)
 		{
 			PORTD ^= 1<<PORTD7;
@@ -96,6 +117,7 @@ int main(void)
 		{
 			LCDSetPos(0,0);
 			LCDSendText("Enter TRUE     ");
+			serialSendChar(0x30);
 		}
 		else
 		{
@@ -108,6 +130,7 @@ int main(void)
 		{
 			LCDSetPos(1,0);
 			LCDSendText("Cancel TRUE     ");
+			serialSendChar(0x31);
 		}
 		else
 		{
@@ -120,6 +143,7 @@ int main(void)
 		{
 			LCDSetPos(2,0);
 			LCDSendText("UP TRUE     ");
+			serialSendChar(0x32);
 		}
 		else
 		{
@@ -127,11 +151,12 @@ int main(void)
 			LCDSendText("UP FALSE");
 		}
 
-		// DOWN flag handler
+		// DOWN flag
 		if (dnFlag)
 		{
 			LCDSetPos(3,0);
 			LCDSendText("DOWN TRUE     ");
+			serialSendChar(0x33);
 		}
 		else
 		{
@@ -223,4 +248,16 @@ ISR(TIMER1_COMPA_vect)
 		}
 	}
 
+}
+
+ISR(USART_RXC_vect)
+{
+	c = UDR;
+	rxflag = 1;;
+}
+
+void serialSendChar(unsigned char c)
+{
+	while (!(UCSRA & (1<<UDRE))); // Wait for serial TX to be ready
+	UDR = c;
 }
