@@ -38,6 +38,8 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "lcd.h"
+//#include "menu.h"
+#include "serial.h"
 
 #define BAUD 38400
 #define UBRR (F_CPU/(16*BAUD))-1
@@ -49,21 +51,36 @@
 #define BUTTONS PORTB
 #define BUTTON_DIR DDRB
 
-void serialSendChar(unsigned char c);
 
+extern int buttons[];
 volatile int enterCnt = 0;
 volatile int cancelCnt = 0;
 volatile int upCnt = 0;
 volatile int dnCnt = 0;
-volatile int enterFlag = 0;
-volatile int cancelFlag = 0;
-volatile int upFlag = 0;
-volatile int dnFlag = 0;
 
 volatile int LEDFlag = 0;
 volatile int LEDCnt = 0;
 volatile unsigned char c = 0;
 volatile int rxflag = 0;
+
+volatile char enterbutton = 0;
+volatile char preventerbutton = 0;
+volatile char cancelbutton = 0;
+volatile char prevcancelbutton = 0;
+volatile char upbutton = 0;
+volatile char prevupbutton = 0;
+volatile char downbutton = 0;
+volatile char prevdownbutton = 0;
+
+typedef enum {
+	OFF,
+	ON,
+} flagstates;
+
+volatile flagstates enterflag = OFF;
+volatile flagstates cancelflag = OFF;
+volatile flagstates upflag = OFF;
+volatile flagstates dnflag = OFF;
 
 
 int main(void)
@@ -78,7 +95,7 @@ int main(void)
 	UCSRC |= (1<<URSEL) | (1<<UCSZ1) | (1<<UCSZ0);
 
 	// Set up buttons
-	BUTTON_DIR &= ~(1<<ENTER | 1<<CANCEL | 1<<UP | 1<<DN);
+	DDRB &= ~(1<<ENTER | 1<<CANCEL | 1<<UP | 1<<DN);
 	PORTB |= 0xF; // Configure ports 0-3 as inputs with pull-ups
 
 	// Timer interrupt, 1mS
@@ -94,12 +111,13 @@ int main(void)
 	//LCDSendText("Copyright LAS 2015");
 	//LCDSetPos(2,0);
 	//LCDSendText("Enter to continue");
-	int count = 0;
+	//int count = 0;
 	//char buffer[] = "";
+	
 
 	while(1)
 	{
-
+		_delay_ms(500);
 		if (rxflag)
 		{
 			LCDSetPos(0,15);
@@ -111,64 +129,26 @@ int main(void)
 			PORTD ^= 1<<PORTD7;
 			LEDFlag = 0;
 		}
-
-		// Enter button
-		if (enterFlag)
-		{
-			LCDSetPos(0,0);
-			LCDSendText("Enter TRUE     ");
-			serialSendChar(0x30);
+		
+		
+		if (enterflag == ON){
+			serialSendText("ENTER\n\r");
 		}
-		else
-		{
-			LCDSetPos(0,0);
-			LCDSendText("Enter FALSE");
+		enterflag = OFF;
+				
+		if (cancelflag == ON){
+			serialSendText("CANCEL\n\r");
 		}
-
-		// Cancel button
-		if (cancelFlag)
-		{
-			LCDSetPos(1,0);
-			LCDSendText("Cancel TRUE     ");
-			serialSendChar(0x31);
-		}
-		else
-		{
-			LCDSetPos(1,0);
-			LCDSendText("Cancel FALSE");
-		}
-
-		// UP flag
-		if (upFlag)
-		{
-			LCDSetPos(2,0);
-			LCDSendText("UP TRUE     ");
-			serialSendChar(0x32);
-		}
-		else
-		{
-			LCDSetPos(2,0);
-			LCDSendText("UP FALSE");
-		}
-
-		// DOWN flag
-		if (dnFlag)
-		{
-			LCDSetPos(3,0);
-			LCDSendText("DOWN TRUE     ");
-			serialSendChar(0x33);
-		}
-		else
-		{
-			LCDSetPos(3,0);
-			LCDSendText("DOWN FALSE");
-		}
-
+		cancelflag = OFF;
+		
+		serialSendText("IDLE\n\r");
+		//handleMenu();
 	}
 }
 
 ISR(TIMER1_COMPA_vect)
 {
+	
 	LEDCnt++;
 	if (LEDCnt >= 500)
 	{
@@ -177,76 +157,69 @@ ISR(TIMER1_COMPA_vect)
 	}
 
 	// Enter button flag handling
-	if (bit_is_clear(PINB, 0))
-	{
+	if (bit_is_clear(PINB, 0)){
 		enterCnt++;
 		if (enterCnt >= 20)
-		{
-			enterFlag = 1;
-		}
+			enterbutton = 1;
 	}
-	else
-	{
-		enterFlag = 0;
-		if (enterCnt > 0)
-		{
-			enterCnt--;
-		}
+	else{
+		enterbutton = 0;
+		enterCnt = 0;
 	}
+	
+	if ((preventerbutton == 0) & (enterbutton == 1)){
+		enterflag = ON;
+	}
+	preventerbutton = enterbutton;
+	
 
 	// Cancel button flag handling
-	if (bit_is_clear(PINB, 1))
-	{
+	if (bit_is_clear(PINB, 1)){
 		cancelCnt++;
 		if (cancelCnt >= 20)
-		{
-			cancelFlag = 1;
-		}
+		cancelbutton = 1;
 	}
-	else
-	{
-		cancelFlag = 0;
-		if (cancelCnt > 0)
-		{
-			cancelCnt--;
-		}
+	else{
+		cancelbutton = 0;
+		cancelCnt = 0;
 	}
-
+	
+	if ((prevcancelbutton == 0) & (cancelbutton == 1)){
+		cancelflag = ON;
+	}
+	prevcancelbutton = cancelbutton;
+	
+	/*
 	// Up button flag handling
-	if (bit_is_clear(PINB, 2))
-	{
+	if (bit_is_clear(PINB, 2)){
 		upCnt++;
-		if (upCnt >= 20)
-		{
-			upFlag = 1;
+		if (upCnt >= 20){
+			if (buttons[2] == 0){
+				buttons[2] = 1;
+			}
 		}
 	}
-	else
-	{
-		upFlag = 0;
-		if (upCnt > 0)
-		{
+	else{
+		if (upCnt > 0){
 			upCnt--;
 		}
 	}
 
 	// Down button flag handling
-	if (bit_is_clear(PINB, 3))
-	{
+	if (bit_is_clear(PINB, 3)){
 		dnCnt++;
-		if (dnCnt >= 20)
-		{
-			dnFlag = 1;
+		if (dnCnt >= 20){
+			if (buttons[3] == 0){
+				buttons[3] = 1;
+			}
 		}
 	}
-	else
-	{
-		dnFlag = 0;
-		if (dnCnt > 0)
-		{
+	else{
+		if (dnCnt > 0){
 			dnCnt--;
 		}
 	}
+	*/
 
 }
 
@@ -256,8 +229,3 @@ ISR(USART_RXC_vect)
 	rxflag = 1;;
 }
 
-void serialSendChar(unsigned char c)
-{
-	while (!(UCSRA & (1<<UDRE))); // Wait for serial TX to be ready
-	UDR = c;
-}

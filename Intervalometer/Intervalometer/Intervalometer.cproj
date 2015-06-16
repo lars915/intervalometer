@@ -189,6 +189,12 @@
     <Folder Include="src\config\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\menu.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\menu.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd.c">
       <SubType>compile</SubType>
     </Compile>
@@ -196,6 +202,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\serial.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\serial.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="menu state diagram.gif">

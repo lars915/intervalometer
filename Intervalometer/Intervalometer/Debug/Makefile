@@ -50,8 +50,10 @@ SUBDIRS :=  \
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../src/menu.c \
 ../src/lcd.c \
 ../src/main.c \
+../src/serial.c \
 ../src/ASF/common/boards/user_board/init.c
 
 
@@ -62,23 +64,31 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+src/menu.o \
 src/lcd.o \
 src/main.o \
+src/serial.o \
 src/ASF/common/boards/user_board/init.o
 
 OBJS_AS_ARGS +=  \
+src/menu.o \
 src/lcd.o \
 src/main.o \
+src/serial.o \
 src/ASF/common/boards/user_board/init.o
 
 C_DEPS +=  \
+src/menu.d \
 src/lcd.d \
 src/main.d \
+src/serial.d \
 src/ASF/common/boards/user_board/init.d
 
 C_DEPS_AS_ARGS +=  \
+src/menu.d \
 src/lcd.d \
 src/main.d \
+src/serial.d \
 src/ASF/common/boards/user_board/init.d
 
 OUTPUT_FILE_PATH +=Intervalometer.elf
@@ -95,6 +105,10 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
+
+
 
 
 

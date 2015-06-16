@@ -99,3 +99,9 @@ void LCDWaitWhileBusy()
 	LCDDATADIR = 0xff;
 	LCDCONTROL &= ~(1<<READWRITE);
 }
+
+void LCDClearHome()
+{
+	LCDSendCommand(0x1);  // Home
+	_delay_ms(2);
+}
