@@ -9,7 +9,7 @@
 #ifndef INCFILE1_H_
 #define INCFILE1_H_
 
-void handleMenu(void);
+void handleMenu(int button_pressed);
 
 
 

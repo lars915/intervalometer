@@ -37,9 +37,11 @@
 #include <stdlib.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include "support.h"
 #include "lcd.h"
-//#include "menu.h"
+#include "menu.h"
 #include "serial.h"
+
 
 #define BAUD 38400
 #define UBRR (F_CPU/(16*BAUD))-1
@@ -51,9 +53,8 @@
 #define BUTTONS PORTB
 #define BUTTON_DIR DDRB
 
-
 extern int buttons[];
-volatile int enterCnt = 0;
+volatile int btnCnt = 0;
 volatile int cancelCnt = 0;
 volatile int upCnt = 0;
 volatile int dnCnt = 0;
@@ -63,24 +64,46 @@ volatile int LEDCnt = 0;
 volatile unsigned char c = 0;
 volatile int rxflag = 0;
 
-volatile char enterbutton = 0;
-volatile char preventerbutton = 0;
-volatile char cancelbutton = 0;
-volatile char prevcancelbutton = 0;
-volatile char upbutton = 0;
-volatile char prevupbutton = 0;
-volatile char downbutton = 0;
-volatile char prevdownbutton = 0;
+volatile int prevbutton = 0;
 
 typedef enum {
 	OFF,
 	ON,
 } flagstates;
 
+
+typedef enum{
+	RS_RUN,
+	RS_DONTRUN,
+} runstates;
+
+typedef enum{
+	NOTEXPIRED,
+	EXPIRED,
+} triggerstates;
+
+// Flags to monitor trigger state timers
+triggerstates trigger = NOTEXPIRED;
+triggerstates halfclick = NOTEXPIRED;
+triggerstates click = NOTEXPIRED;
+
+volatile runstates runstate = RS_DONTRUN; // If DONTRUN, camera will not be triggered
+
+volatile int triggerinit = 200;		// Delay counter for triggering
+volatile int halfclickinit = 10;	// On time for half click
+volatile int clickinit = 10;		// On time for full click
+volatile int triggercount = 0;		// Delay counter for triggering
+volatile int halfclickcount = 0;	// On time for half click
+volatile int clickcount = 0;		// On time for full click
+volatile char prevclick = 0;
+volatile char prevhalfclick = 0;
+
 volatile flagstates enterflag = OFF;
 volatile flagstates cancelflag = OFF;
 volatile flagstates upflag = OFF;
-volatile flagstates dnflag = OFF;
+volatile flagstates downflag = OFF;
+
+volatile btnpressedenum btnpressed = BTN_NONE;
 
 
 int main(void)
@@ -99,8 +122,8 @@ int main(void)
 	PORTB |= 0xF; // Configure ports 0-3 as inputs with pull-ups
 
 	// Timer interrupt, 1mS
-	TCCR1B |= (1<<CS11) | (1<<CS10) | (1<<WGM12);
-	OCR1A = 250; // 1000Hz (1mS) with div by 64
+	TCCR1B |= (1<<CS12) | (1<<WGM12);
+	OCR1A = 625; // 100Hz (10mS) with div by 256
 	TIMSK |= 1<<OCIE1A;
 	sei();
 
@@ -113,7 +136,10 @@ int main(void)
 	//LCDSendText("Enter to continue");
 	//int count = 0;
 	//char buffer[] = "";
-	
+
+	triggercount = triggerinit;		// Delay counter for triggering
+	halfclickcount = halfclickinit;	// On time for half click
+	clickcount = clickinit;		// On time for full click
 
 	while(1)
 	{
@@ -123,104 +149,100 @@ int main(void)
 			LCDSetPos(0,15);
 			LCDSendChar(c);
 		}
-
 		if (LEDFlag)
 		{
-			PORTD ^= 1<<PORTD7;
 			LEDFlag = 0;
 		}
-		
-		
-		if (enterflag == ON){
-			serialSendText("ENTER\n\r");
+
+		switch(btnpressed){
+			case(BTN_ENTER):
+				serialSendText("Enter\n\r");
+				break;
+			case(BTN_CANCEL):
+				serialSendText("Cancel\n\r");
+				break;
+			case(BTN_UP):
+				serialSendText("Up\n\r");
+				break;
+			case(BTN_DOWN):
+				serialSendText("Down\n\r");
+				break;
+			default:
+				serialSendText("None\n\r");
 		}
-		enterflag = OFF;
-				
-		if (cancelflag == ON){
-			serialSendText("CANCEL\n\r");
-		}
-		cancelflag = OFF;
-		
-		serialSendText("IDLE\n\r");
-		//handleMenu();
+		handleMenu(btnpressed);
+		btnpressed = BTN_NONE;
+
 	}
 }
 
 ISR(TIMER1_COMPA_vect)
 {
-	
 	LEDCnt++;
-	if (LEDCnt >= 500)
-	{
+	if (LEDCnt >= 10){
 		LEDFlag = 1;
 		LEDCnt = 0;
+			PORTD ^= 1<<PORTD7;
 	}
 
-	// Enter button flag handling
-	if (bit_is_clear(PINB, 0)){
-		enterCnt++;
-		if (enterCnt >= 20)
-			enterbutton = 1;
+	if (runstate == RS_RUN){
+		triggercount--;
+		if (triggercount <= 0){
+			// fire halfclick
+			halfclickcount--;
+			if (prevhalfclick == 0){
+				serialSendText("Halfclick\n\r");
+				prevhalfclick = 1;
+			}
+		}
+		if (halfclickcount <= 0){
+			// fire click
+			clickcount --;
+			if (prevclick == 0){
+				serialSendText("Click\n\r");
+				prevclick = 1;
+			}
+		}
+		if (clickcount <= 0){
+			// release click
+			// release halfclick
+			triggercount = triggerinit;		// Delay counter for triggering
+			halfclickcount = halfclickinit;	// On time for half click
+			clickcount = clickinit;		// On time for full click
+			prevhalfclick = 0;
+			prevclick = 0;
+			serialSendText("Done\n\r");
+		}
 	}
-	else{
-		enterbutton = 0;
-		enterCnt = 0;
-	}
-	
-	if ((preventerbutton == 0) & (enterbutton == 1)){
-		enterflag = ON;
-	}
-	preventerbutton = enterbutton;
-	
 
-	// Cancel button flag handling
-	if (bit_is_clear(PINB, 1)){
-		cancelCnt++;
-		if (cancelCnt >= 20)
-		cancelbutton = 1;
-	}
-	else{
-		cancelbutton = 0;
-		cancelCnt = 0;
-	}
-	
-	if ((prevcancelbutton == 0) & (cancelbutton == 1)){
-		cancelflag = ON;
-	}
-	prevcancelbutton = cancelbutton;
-	
-	/*
-	// Up button flag handling
-	if (bit_is_clear(PINB, 2)){
-		upCnt++;
-		if (upCnt >= 20){
-			if (buttons[2] == 0){
-				buttons[2] = 1;
+	if ((~PINB & 0x0F) > 0){
+		btnCnt++;
+		if (btnCnt >= 5){
+			if (prevbutton == 0){
+				switch(~PINB & 0x0F){
+					case(1):
+						btnpressed = BTN_ENTER;
+						break;
+					case(2):
+						btnpressed = BTN_CANCEL;
+						break;
+					case(4):
+						btnpressed = BTN_UP;
+						break;
+					case(8):
+						btnpressed = BTN_DOWN;
+						break;
+					default:
+						btnpressed = BTN_NONE;
+				}
+				prevbutton = 1;
 			}
 		}
 	}
 	else{
-		if (upCnt > 0){
-			upCnt--;
-		}
+		btnCnt = 0;
+		prevbutton = 0;
 	}
-
-	// Down button flag handling
-	if (bit_is_clear(PINB, 3)){
-		dnCnt++;
-		if (dnCnt >= 20){
-			if (buttons[3] == 0){
-				buttons[3] = 1;
-			}
-		}
-	}
-	else{
-		if (dnCnt > 0){
-			dnCnt--;
-		}
-	}
-	*/
-
 }
 
 ISR(USART_RXC_vect)

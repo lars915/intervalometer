@@ -4,134 +4,137 @@
  * Created: 6/6/2015 7:52:56 AM
  *  Author: Larry
  */
+#include "support.h"
 #include "menu.h"
 #include "lcd.h"
 #include "serial.h"
 
 #include <util/delay.h>
 
-volatile int buttonCnt = 0;
-
-typedef enum menu_states
-{
+typedef enum{
 	IDLE,
 	RUN,
 	STOP,
 	RESET,
-	TIME
-} menu_State;
+	TIME,
+} menustates;
 
-menu_State menuState = IDLE;
+menustates menustate = IDLE;
 
-volatile uint8_t buttons[] = {0,0,0,0};
-
-void handleMenu(void)
+void handleMenu(int button_pressed)
 {
-	_delay_ms(100);
-	serialSendChar(0xA);
-	serialSendChar(0xD);
-	for (int x = 0; x <4; x++)
-		serialSendChar(0x30 + buttons[x]);
-	serialSendChar(0xA);
-	serialSendChar(0xD);
-	switch (menuState)
+	switch (menustate)
 	{
 		case IDLE:
-			buttons[0] = 0;
-			menuState = RUN;
-			serialSendChar(0x49);
-			LCDSetPos(3,0);
-			LCDSendText("Idle");
+		LCDClearHome();
+		LCDSetPos(0,0);
+		LCDSendText("Idle");
+		switch (button_pressed){
+			case BTN_ENTER:
+			menustate = RUN;
 			break;
+
+			default:
+			menustate = IDLE;
+		}
+		break;
 
 		case RUN:
-			if (buttons[0] == 1){
-				buttons[0]= 0;
-				LCDClearHome();
-				LCDSetPos(0,0);
-				LCDSendText("Start timer");
-				//TBD start timer
-				serialSendChar(0x52);
-			}
-			else if (buttons[3] == 1) {
-				buttons[3]= 0;
-				menuState = STOP;
-			}
-			else if (buttons[1] == 1){
-				buttons[1]= 0;
-				menuState = IDLE;
-			}
+		LCDClearHome();
+		LCDSetPos(0,0);
+		LCDSendText("Run");
+		switch (button_pressed){
+			case BTN_ENTER:
+			//TBD start timer
 			break;
+
+			case BTN_CANCEL:
+			menustate = IDLE;
+			break;
+
+			case BTN_DOWN:
+			menustate = STOP;
+			break;
+
+			default:
+			menustate = RUN;
+		}
+		break;
 
 		case STOP:
-			if (buttons[0] == 1){
-				buttons[0]= 0;
-				LCDClearHome();
-				LCDSetPos(0,0);
-				LCDSendText("Stop timer");
-				//TBD stop timer
-				serialSendChar(0x53);
-			}
-			else if (buttons[2] == 1) {
-				buttons[2]= 0;
-				menuState = RUN;
-			}
-			else if (buttons[3] == 1) {
-				buttons[3]= 0;
-				menuState = RESET;
-			}
-			else if (buttons[1] == 1){
-				buttons[1]= 0;
-				menuState = IDLE;
-			}
+		LCDClearHome();
+		LCDSetPos(0,0);
+		LCDSendText("Stop");
+		switch (button_pressed){
+			case BTN_ENTER:
+			//TBD stop timer
 			break;
+
+			case BTN_CANCEL:
+			menustate = IDLE;
+			break;
+
+			case BTN_UP:
+			menustate = RUN;
+			break;
+
+			case BTN_DOWN:
+			menustate = RESET;
+			break;
+
+			default:
+			menustate = STOP;
+		}
+		break;
 
 		case RESET:
-			if (buttons[0] == 1){
-				buttons[0]= 0;
-				LCDClearHome();
-				LCDSetPos(0,0);
-				LCDSendText("Reset timer");
-				//TBD reset timer
-				serialSendChar(0x45);
-			}
-			else if (buttons[2] == 1) {
-				buttons[2]= 0;
-				menuState = STOP;
-			}
-			else if (buttons[3] == 1) {
-				buttons[3]= 0;
-				menuState = TIME;
-			}
-			else if (buttons[1] == 1){
-				buttons[1]= 0;
-				menuState = IDLE;
-			}
+		LCDClearHome();
+		LCDSetPos(0,0);
+		LCDSendText("Reset");
+		switch (button_pressed){
+			case BTN_ENTER:
+			//TBD reset counter
 			break;
 
-		case TIME:
-			if (buttons[0] == 1){
-				buttons[0]= 0;
-				LCDClearHome();
-				LCDSetPos(0,0);
-				LCDSendText("Set time");
-				serialSendChar(0x54);
-			}
-			else if (buttons[2] == 1) {
-				buttons[2]= 0;
-				// TBD increment time
-			}
-			else if (buttons[3] == 1) {
-				buttons[3]= 0;
-				// TBD decrement time
-			}
-			else if (buttons[1] == 1){
-				buttons[1]= 0;
-				menuState = IDLE;
-			}
+			case BTN_CANCEL:
+			menustate = IDLE;
 			break;
-		
-		default:{}
+
+			case BTN_UP:
+			menustate = STOP;
+			break;
+
+			case BTN_DOWN:
+			menustate = TIME;
+			break;
+
+			default:
+			menustate = RESET;
+		}
+		break;
+
+		case TIME:
+		LCDClearHome();
+		LCDSetPos(0,0);
+		LCDSendText("Time");
+		switch (button_pressed){
+
+			case BTN_CANCEL:
+			menustate = IDLE;
+			break;
+
+			case BTN_UP:
+			// Increment time
+			break;
+
+			case BTN_DOWN:
+			// Decrement time
+			break;
+
+			default:
+			menustate = TIME;
+		}
+		break;
 	}
 }
 
