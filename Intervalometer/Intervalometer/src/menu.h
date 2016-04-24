@@ -9,7 +9,9 @@
 #ifndef INCFILE1_H_
 #define INCFILE1_H_
 
-void handleMenu(int button_pressed);
+#include "support.h"
+
+runstatesenum handleMenu(int button_pressed);
 
 
 

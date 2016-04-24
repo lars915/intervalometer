@@ -53,11 +53,12 @@
 #define BUTTONS PORTB
 #define BUTTON_DIR DDRB
 
-extern int buttons[];
+void triggerhalf(void);
+void triggerfull(void);
+void triggernone(void);
+
+
 volatile int btnCnt = 0;
-volatile int cancelCnt = 0;
-volatile int upCnt = 0;
-volatile int dnCnt = 0;
 
 volatile int LEDFlag = 0;
 volatile int LEDCnt = 0;
@@ -66,45 +67,26 @@ volatile int rxflag = 0;
 
 volatile int prevbutton = 0;
 
+extern int counter;
+extern int time;
+
 typedef enum {
 	OFF,
 	ON,
 } flagstates;
 
+volatile char trigger = 0;
 
-typedef enum{
-	RS_RUN,
-	RS_DONTRUN,
-} runstates;
-
-typedef enum{
-	NOTEXPIRED,
-	EXPIRED,
-} triggerstates;
-
-// Flags to monitor trigger state timers
-triggerstates trigger = NOTEXPIRED;
-triggerstates halfclick = NOTEXPIRED;
-triggerstates click = NOTEXPIRED;
-
-volatile runstates runstate = RS_DONTRUN; // If DONTRUN, camera will not be triggered
-
-volatile int triggerinit = 200;		// Delay counter for triggering
-volatile int halfclickinit = 10;	// On time for half click
-volatile int clickinit = 10;		// On time for full click
-volatile int triggercount = 0;		// Delay counter for triggering
-volatile int halfclickcount = 0;	// On time for half click
-volatile int clickcount = 0;		// On time for full click
-volatile char prevclick = 0;
-volatile char prevhalfclick = 0;
-
-volatile flagstates enterflag = OFF;
-volatile flagstates cancelflag = OFF;
-volatile flagstates upflag = OFF;
-volatile flagstates downflag = OFF;
+volatile int cnt10ms = 0;
+volatile int cnt100ms = 0;
+volatile int cnt1sec = 0;
 
 volatile btnpressedenum btnpressed = BTN_NONE;
+volatile runstatesenum runstate = RS_DONTRUN; // If DONTRUN, camera will not be triggered
 
+volatile char lcdchanged = 1;
+char buffer[4];
+char *out;
 
 int main(void)
 {
@@ -127,23 +109,16 @@ int main(void)
 	TIMSK |= 1<<OCIE1A;
 	sei();
 
-	DDRD |= 1<<PIND7;
-	LCDInit();
-	//LCDSendText("Intervalometer");
-	//LCDSetPos(1,0);
-	//LCDSendText("Copyright LAS 2015");
-	//LCDSetPos(2,0);
-	//LCDSendText("Enter to continue");
-	//int count = 0;
-	//char buffer[] = "";
+	DDRD |= (1<<PIND7 | 1<<PIND3 | 1<<PIND4);
 
-	triggercount = triggerinit;		// Delay counter for triggering
-	halfclickcount = halfclickinit;	// On time for half click
-	clickcount = clickinit;		// On time for full click
+    //DDRA |= (1<<PINA0 | 1<<PINA1);
+    //PORTA &= ~(1<<PORTA0 | 1<<PORTA1);
+    //_delay_ms(10);
+	LCDInit();
 
 	while(1)
 	{
-		_delay_ms(500);
+		_delay_ms(200);
 		if (rxflag)
 		{
 			LCDSetPos(0,15);
@@ -152,9 +127,13 @@ int main(void)
 		if (LEDFlag)
 		{
 			LEDFlag = 0;
+    		PORTD |= 1<<PORTD7;
+            _delay_ms(100);
+    		PORTD &= ~(1<<PORTD7);
 		}
 
-		switch(btnpressed){
+		/*
+         switch(btnpressed){
 			case(BTN_ENTER):
 				serialSendText("Enter\n\r");
 				break;
@@ -170,53 +149,80 @@ int main(void)
 			default:
 				serialSendText("None\n\r");
 		}
-		handleMenu(btnpressed);
+        */
+		runstate = handleMenu(btnpressed);
+
+        if (runstate == RS_RUN){
+			serialSendText("RUN\n\r");
+		}
+		else{
+			serialSendText("STOP\n\r");
+		}
+
+        if ((trigger == 1) && (runstate == RS_RUN)){
+            triggerhalf();
+            _delay_ms(100);
+            triggerfull();
+            _delay_ms(100);
+            triggernone();
+            trigger = 0;
+        }
+
 		btnpressed = BTN_NONE;
 
+		if (lcdchanged == 1){
+			LCDSetPos(0,0);
+			LCDSendText("Delay time: ");
+			itoa(time, buffer, 10);
+			LCDSendText(buffer);
+            LCDSendText("    ");
+			LCDSetPos(1,0);
+			LCDSendText("Frames: ");
+			itoa(counter, buffer, 10);
+			LCDSendText(buffer);
+            LCDSendText("      ");
+			LCDSetPos(2,0);
+			if (runstate == RS_RUN){
+				LCDSendText("Running");
+			}
+			else{
+				LCDSendText("Stopped");
+			}
+			lcdchanged = 0;
+		}
 	}
 }
 
 ISR(TIMER1_COMPA_vect)
 {
 	LEDCnt++;
-	if (LEDCnt >= 10){
+	if (LEDCnt >= 400){
 		LEDFlag = 1;
-		LEDCnt = 0;
-			PORTD ^= 1<<PORTD7;
+        LEDCnt = 0;
+   	}
+
+	cnt10ms++;
+	if (cnt10ms >= 10){
+		cnt10ms = 0;
+		cnt100ms++;
+        out = itoa(cnt1sec, buffer, 10);
+        serialSendText(out);
+        serialSendText("\n\r");
 	}
 
-	if (runstate == RS_RUN){
-		triggercount--;
-		if (triggercount <= 0){
-			// fire halfclick
-			halfclickcount--;
-			if (prevhalfclick == 0){
-				serialSendText("Halfclick\n\r");
-				prevhalfclick = 1;
-			}
-		}
-		if (halfclickcount <= 0){
-			// fire click
-			clickcount --;
-			if (prevclick == 0){
-				serialSendText("Click\n\r");
-				prevclick = 1;
-			}
-		}
-		if (clickcount <= 0){
-			// release click
-			// release halfclick
-			triggercount = triggerinit;		// Delay counter for triggering
-			halfclickcount = halfclickinit;	// On time for half click
-			clickcount = clickinit;		// On time for full click
-			prevhalfclick = 0;
-			prevclick = 0;
-			serialSendText("Done\n\r");
-		}
+    if (cnt100ms >= 10){
+        cnt1sec++;
+        cnt100ms = 0;
+    }
+
+	if (cnt1sec >= time){
+        trigger = 1;
+        cnt1sec = 0;
 	}
 
 	if ((~PINB & 0x0F) > 0){
 		btnCnt++;
+		lcdchanged = 1;
 		if (btnCnt >= 5){
 			if (prevbutton == 0){
 				switch(~PINB & 0x0F){
@@ -251,3 +257,19 @@ ISR(USART_RXC_vect)
 	rxflag = 1;;
 }
 
+void triggerhalf(void){
+    PORTD |= 1<<PORTD3;
+    serialSendText("Halfclick\n\r");
+}
+
+void triggerfull(void){
+    PORTD |= 1<<PORTD4;
+    serialSendText("Click\n\r");
+}
+
+void triggernone(void){
+    counter++;
+    PORTD &= ~(1<<PORTD3 | 1<<PORTD4);
+	serialSendText("Done\n\r");
+    lcdchanged = 1;
+}

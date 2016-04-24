@@ -17,6 +17,13 @@ typedef enum{
 	BTN_DOWN,
 } btnpressedenum;
 
+typedef enum{
+	RS_RUN,
+	RS_DONTRUN,
+} runstatesenum;
+
+
+
 
 
 
